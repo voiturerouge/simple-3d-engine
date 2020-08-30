@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>Lenna.png</file>
+        <file>Freedo.bmp</file>
+    </qresource>
+</RCC>
