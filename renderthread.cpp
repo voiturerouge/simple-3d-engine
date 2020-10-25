@@ -1,39 +1,52 @@
 #include "renderthread.h"
 
-renderThread::renderThread(QObject *parent)
+RenderThread::RenderThread(Camera &camera, QVector<Mesh> &meshList, Device &device, QGraphicsPixmapItem &pixmap, QObject *parent)
     : QThread(parent)
+    , p_camera(camera)
+    , p_meshList(meshList)
+    , p_device(device)
+    , p_pixmapItem(pixmap)
 {
     qDebug("renderThread");
     m_abort = false;
 }
 
-renderThread::~renderThread()
+RenderThread::~RenderThread()
 {
-    qDebug("~renderThread");
+    qDebug("~renderThread in");
     m_abort = true;
-    m_mutex.lock();
-    m_condition.wakeAll();
-    m_mutex.unlock();
     wait();
+    qDebug("~renderThread out");
 }
 
-void renderThread::run()
+void RenderThread::run()
 {
-    forever {
-        m_mutex.lock();
-        m_condition.wait(&m_mutex);
-        m_mutex.unlock();
+    qDebug("renderThread::run");
+    int i = 0;
+    while (!m_abort) {
+        qDebug("render thread %d", i);
+        i++;
+//        // Rotate
+//        p_meshList[0].setRotation();
 
-        int i = 0;
-        while (!m_abort) {
-            qDebug("worker thread %d", i);
-            i++;
-            usleep(100000);
-        }
+//        // Render and present
+//        p_device->render(*p_camera, *p_meshList);
+//        p_device->present();
 
-        if (m_abort)
-            return;
+//        // Show image
+//        //
+//        QGraphicsPixmapItem pixmapItem;
+//        pixmapItem.setPixmap(QPixmap::fromImage(p_device->getImage()));
+//        p_scene->addItem(p_pixmapItem);
+//        ui->graphicsView->show();
+
+
+//        p_pixmapItem->setPixmap(QPixmap::fromImage(p_device->getImage()));
+//        ui->graphicsView->show();
+
+        // Sleep
+        usleep(100000);
     }
     qDebug("Exiting thread loop!");
-
+    qDebug() << "thread id " << QThread::currentThreadId();
 }

@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "canvas.h"
 #include "camera.h"
 #include "device.h"
 #include "mesh.h"
@@ -29,17 +28,16 @@ private slots:
 
 private:
     Ui::MainWindow* ui;
-    renderThread m_renderThread; // The render thread is allocated on the stack
-    Canvas* p_canvas;
+    RenderThread* p_renderThread;
     Camera* p_camera;
     QImage* p_image;
     Device* p_device;
     Mesh* p_mesh;
-    QGraphicsPixmapItem* p_pixmapItem;
+    QGraphicsPixmapItem* p_pixmap;
     QGraphicsScene* p_scene;
 
+    // Mesh
     QVector<Mesh> m_meshList;
-
 
 };
 #endif // MAINWINDOW_H

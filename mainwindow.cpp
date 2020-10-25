@@ -11,15 +11,12 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     qDebug("MainWindow");
+    qDebug() << "thread id " << QThread::currentThreadId();
 
     // UI
     p_scene = new QGraphicsScene(this);
     ui->setupUi(this);
-    ui->graphicsView->setScene(p_scene);
-
-    // Canvas
-    // p_canvas = new Canvas(this);
-    // setCentralWidget(p_canvas);
+    ui->renderView->setScene(p_scene);
 
     // Meshes
     p_mesh = new Mesh();
@@ -106,18 +103,29 @@ MainWindow::MainWindow(QWidget *parent)
     p_device = new Device();
     p_device->setImage(*p_image);
     p_device->clear(Qt::black);
-    //std::initializer_list<Mesh> meshes = {*p_mesh};
     p_device->render(*p_camera, m_meshList);
     p_device->present();
 
     //
-    p_pixmapItem = new QGraphicsPixmapItem();
-    p_pixmapItem->setPixmap(QPixmap::fromImage(p_device->getImage()));
-    p_scene->addItem(p_pixmapItem);
-    ui->graphicsView->show();
+    p_pixmap = new QGraphicsPixmapItem();
+    p_pixmap->setPixmap(QPixmap::fromImage(p_device->getImage()));
+    p_scene->addItem(p_pixmap);
+    //ui->renderView->update();
+
+
+    p_camera->setPosition(QVector3D(0, -20, 5));
+    p_camera->setDirection(QVector3D(0, 1, 0));
+    p_device->clear(Qt::black); // A mettre dans le device
+    p_device->render(*p_camera, m_meshList);
+    p_device->present();
+    p_pixmap->setPixmap(QPixmap::fromImage(p_device->getImage()));
+//    p_scene->addItem(p_pixmapItem);
+//    ui->renderView->update();
+
 
     // Start the render thread
-    //m_renderThread.start();
+    p_renderThread = new RenderThread(*p_camera, m_meshList, *p_device, *p_pixmap, this);
+    p_renderThread->start();
 }
 
 MainWindow::~MainWindow()
@@ -129,4 +137,5 @@ MainWindow::~MainWindow()
     delete p_mesh;
     delete p_image;
     delete p_scene;
+    delete p_renderThread;
 }

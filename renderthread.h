@@ -1,18 +1,24 @@
 #ifndef RENDERTHREAD_H
 #define RENDERTHREAD_H
 
-#include <QThread>
-#include <QMutex>
-#include <QWaitCondition>
-#include <QObject>
+#include "camera.h"
+#include "device.h"
+#include "mesh.h"
 
-class renderThread : public QThread
+#include <QDebug>
+#include <QGraphicsPixmapItem>
+#include <QObject>
+#include <QThread>
+#include <QWaitCondition>
+
+
+class RenderThread : public QThread
 {
     Q_OBJECT
 
 public:
-    renderThread(QObject *parent = nullptr);
-    ~renderThread();
+    RenderThread(Camera &camera, QVector<Mesh> &meshList, Device &device, QGraphicsPixmapItem &pixmap, QObject *parent = nullptr);
+    ~RenderThread();
 
 signals:
 
@@ -20,9 +26,12 @@ protected:
     void run() override;
 
 private:
-    QMutex m_mutex;
-    QWaitCondition m_condition;
-    bool m_abort;
+    // TODO change to const reference?
+    std::atomic<bool> m_abort;
+    Camera& p_camera;
+    QVector<Mesh>& p_meshList;
+    Device& p_device;
+    QGraphicsPixmapItem& p_pixmapItem;
 };
 
 #endif // RENDERTHREAD_H
