@@ -1,5 +1,5 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef RENDERER_H
+#define RENDERER_H
 
 #include "camera.h"
 #include "mesh.h"
@@ -11,10 +11,10 @@
 #include <QVector3D>
 #include <QObject>
 
-class Device
+class Renderer
 {
 public:
-    Device();
+    Renderer();
     void setImage(QImage image);
     QImage getImage() const;
     void clear(const QColor& color);
@@ -31,4 +31,4 @@ private:
     QImage m_backBuffer;
 };
 
-#endif // DEVICE_H
+#endif // RENDERER_H

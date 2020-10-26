@@ -17,7 +17,7 @@
    <property name="styleSheet">
     <string notr="true"/>
    </property>
-   <widget class="QGraphicsView" name="renderView">
+   <widget class="QGraphicsView" name="mainView">
     <property name="geometry">
      <rect>
       <x>10</x>

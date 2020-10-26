@@ -2,9 +2,9 @@
 #define MAINWINDOW_H
 
 #include "camera.h"
-#include "device.h"
+#include "renderer.h"
 #include "mesh.h"
-#include "renderthread.h"
+#include "renderloop.h"
 
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -27,17 +27,20 @@ protected:
 private slots:
 
 private:
-    Ui::MainWindow* ui;
-    RenderThread* p_renderThread;
+    // Model
     Camera* p_camera;
-    QImage* p_image;
-    Device* p_device;
     Mesh* p_mesh;
-    QGraphicsPixmapItem* p_pixmap;
-    QGraphicsScene* p_scene;
-
-    // Mesh
     QVector<Mesh> m_meshList;
 
+    // View
+    Ui::MainWindow* ui;
+    QGraphicsPixmapItem* p_pixmap;
+    QGraphicsScene* p_scene;
+    QImage* p_image;
+    Renderer* p_renderer;
+
+    // Thread
+    QThread* p_thread;
+    RenderLoop* p_renderLoop;
 };
 #endif // MAINWINDOW_H

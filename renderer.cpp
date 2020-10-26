@@ -1,11 +1,11 @@
-#include "device.h"
+#include "renderer.h"
 
-Device::Device()
+Renderer::Renderer()
 {
 
 }
 
-void Device::setImage(QImage image)
+void Renderer::setImage(QImage image)
 {
     // Check image format
     if (!image.hasAlphaChannel())
@@ -15,29 +15,29 @@ void Device::setImage(QImage image)
     m_backBuffer = image;
 }
 
-QImage Device::getImage() const
+QImage Renderer::getImage() const
 {
     return m_image;
 }
 
-void Device::clear(const QColor& color)
+void Renderer::clear(const QColor& color)
 {
     m_backBuffer.fill(color);
 }
 
-void Device::present()
+void Renderer::present()
 {
     // Write the back buffer to the image
     m_image = m_backBuffer;
 }
 
-void Device::putPixel(int x, int y, const QColor& color)
+void Renderer::putPixel(int x, int y, const QColor& color)
 {
     QColor toto = color;
     m_backBuffer.setPixel(x, y, toto.rgba());
 }
 
-void Device::drawPoint(const QVector2D& point, const QColor& color)
+void Renderer::drawPoint(const QVector2D& point, const QColor& color)
 {
     //qDebug("Draw point at (%d, %d)", (int)point.x(), (int)point.y());
     if (point.x() >= 0 && point.y() >= 0 && point.x() < m_image.width() && point.y() < m_image.height()) {
@@ -46,7 +46,7 @@ void Device::drawPoint(const QVector2D& point, const QColor& color)
     }
 }
 
-void Device::drawLine(const QVector2D &point0, const QVector2D &point1, const QColor& color)
+void Renderer::drawLine(const QVector2D &point0, const QVector2D &point1, const QColor& color)
 {
     float dist = (point1 - point0).length();
     if (dist < 1)
@@ -57,22 +57,22 @@ void Device::drawLine(const QVector2D &point0, const QVector2D &point1, const QC
     drawLine(middlePoint, point1, color);
 }
 
-void Device::render(Camera camera, const QVector<Mesh>& meshList)
+void Renderer::render(Camera camera, const QVector<Mesh>& meshList)
 {
     QMatrix4x4 view;
     view.setToIdentity();
     view.lookAt(camera.getPosition(), camera.getTarget(), camera.getDirection());
     QMatrix4x4 projection;
     projection.setToIdentity();
-    qDebug("Image WxH %dx%d", m_image.width(), m_image.height());
-    qDebug("Image format %d", m_image.format());
+//    qDebug("Image WxH %dx%d", m_image.width(), m_image.height());
+//    qDebug("Image format %d", m_image.format());
     projection.perspective(45, (float)m_image.width()/(float)m_image.height(), 1.0, 1000.0);
     QRect viewport(0, 0, m_image.width(), m_image.height());
 
     // Bitmap origin
     //this->drawPoint(QVector3D(0,0,0), Qt::red);
 
-    qDebug("Number of meshes %d", meshList.size());
+//    qDebug("Number of meshes %d", meshList.size());
 
     for(const Mesh& mesh : meshList) {
         QMatrix4x4 model;
@@ -80,7 +80,7 @@ void Device::render(Camera camera, const QVector<Mesh>& meshList)
         QVector2D point0, point1, point2;
 
         qDebug("Rotation (%d, %d, %d)", (int)mesh.getRotation().x(), (int)mesh.getRotation().y(), (int)mesh.getRotation().z());
-        qDebug("Translation (%d, %d, %d)", (int)mesh.getPosition().x(), (int)mesh.getPosition().y(), (int)mesh.getPosition().z());
+        qDebug("Position (%d, %d, %d)", (int)mesh.getPosition().x(), (int)mesh.getPosition().y(), (int)mesh.getPosition().z());
 
         quaternion.normalize();
         quaternion.fromEulerAngles(mesh.getRotation().x(), mesh.getRotation().y(), mesh.getRotation().z());
@@ -109,10 +109,10 @@ void Device::render(Camera camera, const QVector<Mesh>& meshList)
         // Faces
         qDebug("Number of faces %d", mesh.m_faces.size());
         for (QVector<int> face : mesh.m_faces) {
-            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[0]].x(), (int)mesh.m_vertices[face[0]].y(), (int)mesh.m_vertices[face[0]].z());
-            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[1]].x(), (int)mesh.m_vertices[face[1]].y(), (int)mesh.m_vertices[face[1]].z());
-            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[2]].x(), (int)mesh.m_vertices[face[2]].y(), (int)mesh.m_vertices[face[2]].z());
-            qDebug("Vertex color %d %d %d", mesh.getColor().red(), mesh.getColor().green(), mesh.getColor().blue());
+//            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[0]].x(), (int)mesh.m_vertices[face[0]].y(), (int)mesh.m_vertices[face[0]].z());
+//            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[1]].x(), (int)mesh.m_vertices[face[1]].y(), (int)mesh.m_vertices[face[1]].z());
+//            qDebug("Vertex (%d, %d, %d)", (int)mesh.m_vertices[face[2]].x(), (int)mesh.m_vertices[face[2]].y(), (int)mesh.m_vertices[face[2]].z());
+//            qDebug("Vertex color %d %d %d", mesh.getColor().red(), mesh.getColor().green(), mesh.getColor().blue());
             point0 = mesh.m_vertices[face[0]].project(view*model, projection, viewport).toVector2D();
             point1 = mesh.m_vertices[face[1]].project(view*model, projection, viewport).toVector2D();
             point2 = mesh.m_vertices[face[2]].project(view*model, projection, viewport).toVector2D();

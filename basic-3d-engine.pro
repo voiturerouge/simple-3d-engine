@@ -18,19 +18,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     camera.cpp \
     canvas.cpp \
-    device.cpp \
+    loader.cpp \
     main.cpp \
     mainwindow.cpp \
     mesh.cpp \
-    renderthread.cpp
+    renderer.cpp \
+    renderloop.cpp
 
 HEADERS += \
     camera.h \
     canvas.h \
-    device.h \
+    loader.h \
     mainwindow.h \
     mesh.h \
-    renderthread.h
+    renderer.h \
+    renderloop.h
 
 FORMS += \
     mainwindow.ui

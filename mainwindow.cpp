@@ -1,3 +1,4 @@
+#include "loader.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -5,137 +6,72 @@
 #include <QGraphicsPixmapItem>
 #include <QString>
 #include <QtCore>
+#include <QThread>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     qDebug("MainWindow");
-    qDebug() << "thread id " << QThread::currentThreadId();
 
-    // UI
-    p_scene = new QGraphicsScene(this);
-    ui->setupUi(this);
-    ui->renderView->setScene(p_scene);
-
-    // Meshes
-    p_mesh = new Mesh();
-
-    // X axis
-    p_mesh->m_vertices.clear();
-    p_mesh->m_vertices.append(QVector3D(0, 0, 0));
-    p_mesh->m_vertices.append(QVector3D(1, 0, 0));
-    p_mesh->m_faces.clear();
-    p_mesh->m_faces.append({0, 1, 1});
-    p_mesh->setRotation(QVector3D(0, 0, 0));
-    p_mesh->setPosition(QVector3D(0, 0, 0));
-    p_mesh->setScale(1);
-    p_mesh->setColor(Qt::red);
-    m_meshList.append(*p_mesh);
-
-    // Y axis
-    p_mesh->m_vertices.clear();
-    p_mesh->m_vertices.append(QVector3D(0, 0, 0));
-    p_mesh->m_vertices.append(QVector3D(0, 1, 0));
-    p_mesh->m_faces.clear();
-    p_mesh->m_faces.append({0, 1, 1});
-    p_mesh->setRotation(QVector3D(0, 0, 0));
-    p_mesh->setPosition(QVector3D(0, 0, 0));
-    p_mesh->setScale(1);
-    p_mesh->setColor(Qt::green);
-    m_meshList.append(*p_mesh);
-
-    // Z axis
-    p_mesh->m_vertices.clear();
-    p_mesh->m_vertices.append(QVector3D(0, 0, 0));
-    p_mesh->m_vertices.append(QVector3D(0, 0, 1));
-    p_mesh->m_faces.clear();
-    p_mesh->m_faces.append({0, 1, 1});
-    p_mesh->setRotation(QVector3D(0, 0, 0));
-    p_mesh->setPosition(QVector3D(0, 0, 0));
-    p_mesh->setScale(1);
-    p_mesh->setColor(Qt::blue);
-    m_meshList.append(*p_mesh);
-
-    // Cube
-    p_mesh->m_vertices.clear();
-    p_mesh->m_vertices.append(QVector3D(-1, 1, 1));
-    p_mesh->m_vertices.append(QVector3D(1, 1, 1));
-    p_mesh->m_vertices.append(QVector3D(-1, -1, 1));
-    p_mesh->m_vertices.append(QVector3D(1, -1, 1));
-    p_mesh->m_vertices.append(QVector3D(-1, 1, -1));
-    p_mesh->m_vertices.append(QVector3D(1, 1, -1));
-    p_mesh->m_vertices.append(QVector3D(1, -1, -1));
-    p_mesh->m_vertices.append(QVector3D(-1, -1, -1));
-    p_mesh->m_faces.clear();
-    p_mesh->m_faces.append({0, 1, 2});
-    p_mesh->m_faces.append({1, 2, 3});
-    p_mesh->m_faces.append({1, 3, 6});
-    p_mesh->m_faces.append({1, 5, 6});
-    p_mesh->m_faces.append({0, 1, 4});
-    p_mesh->m_faces.append({1, 4, 5});
-    p_mesh->m_faces.append({2, 3, 7});
-    p_mesh->m_faces.append({3, 6, 7});
-    p_mesh->m_faces.append({0, 2, 7});
-    p_mesh->m_faces.append({0, 4, 7});
-    p_mesh->m_faces.append({4, 5, 6});
-    p_mesh->m_faces.append({4, 6, 7});
-    p_mesh->setRotation(QVector3D(-143, 30, 30));
-    p_mesh->setPosition(QVector3D(0, 0, 0));
-    p_mesh->setScale(2);
-    p_mesh->setColor(Qt::yellow);
-    m_meshList.append(*p_mesh);
-
-    // Camera
+    // Model
     p_camera = new Camera();
     p_camera->setTarget(QVector3D(0, 0, 0));
     p_camera->setPosition(QVector3D(10, 3, 5));
-    p_camera->setDirection(QVector3D(0.5, -1, 0));
+    p_camera->setDirection(QVector3D(0, -1, 0));
+    Loader::load(m_meshList);
 
-    // Image
+    // View
+    // UI
+    ui->setupUi(this);
+
+    // scene
+    p_scene = new QGraphicsScene(this);
+    ui->mainView->setScene(p_scene);
+
+    // renderer
     p_image = new QImage(640, 480, QImage::Format_ARGB32);
-    //p_image = new QImage(":/images/Freedo.bmp");
-    if (p_image->isNull())
-        qDebug("Image did not load properly!");
-    qDebug("Image format %d", p_image->format());
+    p_renderer = new Renderer();
+    p_renderer->setImage(*p_image);
+    p_renderer->clear(Qt::black);
+    p_renderer->render(*p_camera, m_meshList);
+    p_renderer->present();
 
-    // Device
-    p_device = new Device();
-    p_device->setImage(*p_image);
-    p_device->clear(Qt::black);
-    p_device->render(*p_camera, m_meshList);
-    p_device->present();
-
-    //
+    // pixmap
     p_pixmap = new QGraphicsPixmapItem();
-    p_pixmap->setPixmap(QPixmap::fromImage(p_device->getImage()));
+    p_pixmap->setPixmap(QPixmap::fromImage(p_renderer->getImage()));
     p_scene->addItem(p_pixmap);
-    //ui->renderView->update();
+    ui->mainView->update();
 
-
-    p_camera->setPosition(QVector3D(0, -20, 5));
-    p_camera->setDirection(QVector3D(0, 1, 0));
-    p_device->clear(Qt::black); // A mettre dans le device
-    p_device->render(*p_camera, m_meshList);
-    p_device->present();
-    p_pixmap->setPixmap(QPixmap::fromImage(p_device->getImage()));
-//    p_scene->addItem(p_pixmapItem);
-//    ui->renderView->update();
-
-
-    // Start the render thread
-    p_renderThread = new RenderThread(*p_camera, m_meshList, *p_device, *p_pixmap, this);
-    p_renderThread->start();
+    // Thread
+    p_thread = new QThread;
+    p_renderLoop = new RenderLoop(*p_camera, m_meshList, *p_renderer, *p_pixmap);
+    p_renderLoop->moveToThread(p_thread);
+    connect(p_thread, &QThread::started, p_renderLoop, &RenderLoop::start);
+    connect(p_thread, &QThread::finished, p_thread, &QObject::deleteLater);
+    p_thread->start();
 }
 
 MainWindow::~MainWindow()
 {
     qDebug("~MainWindow");
-    delete ui;
-    delete p_camera;
-    delete p_device;
-    delete p_mesh;
-    delete p_image;
-    delete p_scene;
-    delete p_renderThread;
+
+    // Thread
+    p_renderLoop->stop();
+    p_thread->quit();
+    p_thread->wait();
+    delete p_renderLoop;
+    delete p_thread;
+
+    // Model
+//    delete p_camera;
+//    delete p_renderer;
+//    delete p_mesh;
+
+    // View
+//    delete ui;
+//    delete p_image;
+//    delete p_scene;
+
+    //delete p_pixmap;
 }
