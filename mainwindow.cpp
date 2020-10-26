@@ -64,14 +64,11 @@ MainWindow::~MainWindow()
     delete p_thread;
 
     // Model
-//    delete p_camera;
-//    delete p_renderer;
-//    delete p_mesh;
+    delete p_camera;
+    delete p_renderer;
 
     // View
-//    delete ui;
-//    delete p_image;
-//    delete p_scene;
-
-    //delete p_pixmap;
+    delete ui;
+    delete p_image;
+    delete p_scene;
 }

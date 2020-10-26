@@ -29,7 +29,6 @@ private slots:
 private:
     // Model
     Camera* p_camera;
-    Mesh* p_mesh;
     QVector<Mesh> m_meshList;
 
     // View
