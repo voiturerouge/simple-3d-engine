@@ -22,7 +22,7 @@ public:
     void putPixel(int x, int y, const QColor& color);
     void drawPoint(const QVector2D& point, const QColor& color);
     void drawLine(const QVector2D& point1, const QVector2D& point2, const QColor& color);
-    void render(Camera camera, const QVector<Mesh>& meshList);
+    void render(const Camera& camera, const QVector<Mesh>& meshList);
 
 signals:
 

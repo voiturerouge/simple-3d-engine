@@ -22,8 +22,9 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     mesh.cpp \
-    renderer.cpp \
-    renderloop.cpp
+    modelloop.cpp \
+    render.cpp \
+    renderer.cpp
 
 HEADERS += \
     camera.h \
@@ -31,8 +32,9 @@ HEADERS += \
     loader.h \
     mainwindow.h \
     mesh.h \
-    renderer.h \
-    renderloop.h
+    modelloop.h \
+    render.h \
+    renderer.h
 
 FORMS += \
     mainwindow.ui

@@ -1,5 +1,5 @@
-#ifndef RENDERTHREAD_H
-#define RENDERTHREAD_H
+#ifndef MODELLOOP_H
+#define MODELLOOP_H
 
 #include "camera.h"
 #include "renderer.h"
@@ -10,13 +10,13 @@
 #include <QObject>
 #include <QThread>
 
-class RenderLoop : public QObject
+class ModelLoop : public QObject
 {
     Q_OBJECT
 
 public:
-    RenderLoop(Camera &camera, QVector<Mesh> &meshList, Renderer &renderer, QGraphicsPixmapItem &pixmap, QObject *parent = nullptr);
-    ~RenderLoop();
+    ModelLoop(Camera &camera, QVector<Mesh> &meshList, QObject *parent = nullptr);
+    ~ModelLoop();
 
 public slots:
     void start();
@@ -30,12 +30,8 @@ private:
     Camera& m_camera;
     QVector<Mesh>& m_meshList;
 
-    // View
-    Renderer& m_renderer;
-    QGraphicsPixmapItem& m_pixmap;
-
     // Thread
     std::atomic<bool> m_abort;
 };
 
-#endif // RENDERTHREAD_H
+#endif // MODELLOOP_H

@@ -4,7 +4,8 @@
 #include "camera.h"
 #include "renderer.h"
 #include "mesh.h"
-#include "renderloop.h"
+#include "modelloop.h"
+#include "render.h"
 
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -33,13 +34,15 @@ private:
 
     // View
     Ui::MainWindow* ui;
-    QGraphicsPixmapItem* p_pixmap;
     QGraphicsScene* p_scene;
+    Render* p_render;
+    QGraphicsPixmapItem* p_pixmapItem;
+    QPixmap* p_pixmap;
     QImage* p_image;
     Renderer* p_renderer;
 
     // Thread
     QThread* p_thread;
-    RenderLoop* p_renderLoop;
+    ModelLoop* p_modelLoop;
 };
 #endif // MAINWINDOW_H
