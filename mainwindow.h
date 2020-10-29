@@ -36,10 +36,6 @@ private:
     Ui::MainWindow* ui;
     QGraphicsScene* p_scene;
     Render* p_render;
-    QGraphicsPixmapItem* p_pixmapItem;
-    QPixmap* p_pixmap;
-    QImage* p_image;
-    Renderer* p_renderer;
 
     // Thread
     QThread* p_thread;

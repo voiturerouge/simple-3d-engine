@@ -1,4 +1,5 @@
 #include "render.h"
+#include "math.h"
 
 Render::Render(Camera &camera, QVector<Mesh> &meshList, QObject *parent)
     : QObject(parent)
@@ -21,11 +22,10 @@ Render::Render(Camera &camera, QVector<Mesh> &meshList, QObject *parent)
 
 void Render::nextFrame()
 {
-    static int i = -50;
-    i++;
-//    qDebug("nextFrame %d", i);
-    m_meshList[3].setRotation(QVector3D(-45, 30, 0));
-    m_meshList[3].setPosition(QVector3D(-i*0.05f,0,0));
+    static float i = 0;
+    i = i + 0.5f;
+    m_meshList[3].setRotation(QVector3D(fmod(i,360), fmod(i,360), 0));
+    //m_meshList[3].setPosition(QVector3D(-1,0,0));
 
     p_renderer->clear(Qt::black); // TODO to be put directly in the renderer
     p_renderer->render(m_camera, m_meshList);

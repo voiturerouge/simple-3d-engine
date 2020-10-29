@@ -58,38 +58,33 @@ void Renderer::drawLine(const QVector2D& point0, const QVector2D& point1, const 
 
 void Renderer::render(const Camera& camera, const QVector<Mesh>& meshList)
 {
+    // View
     QMatrix4x4 view;
     view.setToIdentity();
     view.lookAt(camera.getPosition(), camera.getTarget(), camera.getDirection());
 
+    // Projection
     QMatrix4x4 projection;
     projection.setToIdentity();
     projection.perspective(45, (float)m_image.width()/(float)m_image.height(), 1.0, 1000.0);
     QRect viewport(0, 0, m_image.width(), m_image.height());
 
-//    qDebug("Number of meshes %d", meshList.size());
-
     for(const Mesh& mesh : meshList) {
+
+        // World
         QMatrix4x4 world;
-        QQuaternion quaternion;
-        QVector2D point0, point1, point2;
-
-//        qDebug("Rotation (%d, %d, %d)", (int)mesh.getRotation().x(), (int)mesh.getRotation().y(), (int)mesh.getRotation().z());
-//        qDebug("Position (%d, %d, %d)", (int)mesh.getPosition().x(), (int)mesh.getPosition().y(), (int)mesh.getPosition().z());
-
-        quaternion.normalize();
-        quaternion.fromEulerAngles(mesh.getRotation().x(), mesh.getRotation().y(), mesh.getRotation().z());
         world.setToIdentity();
         world.scale(mesh.getScale());
-        world.rotate(quaternion);
         world.translate(mesh.getPosition());
+        world.rotate(mesh.getRotation().x(), 1, 0, 0);
+        world.rotate(mesh.getRotation().y(), 0, 1, 0);
+        world.rotate(mesh.getRotation().z(), 0, 0, 1);
 
-        // Faces
-//        qDebug("Number of faces %d", mesh.m_faces.size());
+        // Draw
         for (QVector<int> face : mesh.m_faces) {
-            point0 = mesh.m_vertices[face[0]].project(view*world, projection, viewport).toVector2D();
-            point1 = mesh.m_vertices[face[1]].project(view*world, projection, viewport).toVector2D();
-            point2 = mesh.m_vertices[face[2]].project(view*world, projection, viewport).toVector2D();
+            QVector2D point0 = mesh.m_vertices[face[0]].project(view*world, projection, viewport).toVector2D();
+            QVector2D point1 = mesh.m_vertices[face[1]].project(view*world, projection, viewport).toVector2D();
+            QVector2D point2 = mesh.m_vertices[face[2]].project(view*world, projection, viewport).toVector2D();
             drawLine(point0, point1, mesh.getColor());
             drawLine(point1, point2, mesh.getColor());
             drawLine(point2, point0, mesh.getColor());

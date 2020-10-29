@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Model
     p_camera = new Camera();
     p_camera->setTarget(QVector3D(0, 0, 0));
-    p_camera->setPosition(QVector3D(10, 3, 5));
+    p_camera->setPosition(QVector3D(10, 3, 10));
     p_camera->setDirection(QVector3D(0, -1, 0));
     Loader::load(m_meshList);
 
@@ -35,18 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->mainView->setScene(p_scene);
     p_render = new Render(*p_camera, m_meshList, this);
     p_scene->addItem(p_render);
-
-//    p_pixmapItem = new QGraphicsPixmapItem();
-//    p_pixmap = new QPixmap(640, 480);
-//    p_pixmapItem->setPixmap(*p_pixmap);
-//    p_scene->addItem(p_pixmapItem);
-//    ui->mainView->update();
-
-    // renderer
-//    p_image = new QImage(640, 480, QImage::Format_ARGB32);
-//    p_renderer = new Renderer();
-//    p_renderer->setImage(*p_image); // TODO move width, height, format to the constructor
-//    p_renderer->clear(Qt::black);
 
     // Thread
 //    p_thread = new QThread;
@@ -70,11 +58,8 @@ MainWindow::~MainWindow()
 
     // Model
     delete p_camera;
-//    delete p_renderer;
 
     // View
     delete ui;
-//    delete p_image;
-//    delete p_scene;
     delete p_render;
 }
