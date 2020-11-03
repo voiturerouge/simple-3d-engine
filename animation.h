@@ -1,5 +1,5 @@
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef ANIMATION_H
+#define ANIMATION_H
 
 #include "renderer.h"
 #include "camera.h"
@@ -10,12 +10,12 @@
 #include <QPainter>
 #include <QTimer>
 
-class Render : public QObject, public QGraphicsItem
+class Animation : public QObject, public QGraphicsItem
 {
     Q_OBJECT
 
 public:
-    explicit Render(Camera &camera, QVector<Mesh> &meshList, QObject *parent = nullptr);
+    explicit Animation(Camera &camera, QVector<Mesh> &meshList, QObject *parent = nullptr);
 
 signals:
 
@@ -35,7 +35,6 @@ private:
     // Model
     Camera& m_camera;
     QVector<Mesh>& m_meshList;
-
 };
 
-#endif // RENDER_H
+#endif // ANIMATION_H

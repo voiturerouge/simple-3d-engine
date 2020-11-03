@@ -16,24 +16,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    animation.cpp \
     camera.cpp \
-    canvas.cpp \
     loader.cpp \
     main.cpp \
     mainwindow.cpp \
     mesh.cpp \
-    modelloop.cpp \
-    render.cpp \
     renderer.cpp
 
 HEADERS += \
+    animation.h \
     camera.h \
-    canvas.h \
     loader.h \
     mainwindow.h \
     mesh.h \
-    modelloop.h \
-    render.h \
     renderer.h
 
 FORMS += \

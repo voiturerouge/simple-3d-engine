@@ -1,50 +1,41 @@
 #include "renderer.h"
 
-Renderer::Renderer()
+Renderer::Renderer(int width, int height, QImage::Format format)
 {
-
+    p_image = new QImage(width, height, format);
 }
 
-void Renderer::setImage(QImage image)
+Renderer::~Renderer()
 {
-    // Check image format
-    if (!image.hasAlphaChannel())
-        throw std::invalid_argument("Invalid image format");
-
-    m_image = image;
-    m_backBuffer = image;
+    delete p_image;
 }
 
 QImage Renderer::getImage() const
 {
-    return m_image;
+    return *p_image;
 }
 
 void Renderer::clear(const QColor& color)
 {
-    m_backBuffer.fill(color);
-}
-
-void Renderer::present()
-{
-    // Write the back buffer to the image
-    m_image = m_backBuffer.copy();
+    p_image->fill(color);
 }
 
 void Renderer::putPixel(int x, int y, const QColor& color)
 {
-    m_backBuffer.setPixel(x, y, color.rgba());
+    // TODO setPixel is expensive, use the scanline array instead
+    p_image->setPixel(x, y, color.rgba());
 }
 
 void Renderer::drawPoint(const QVector2D& point, const QColor& color)
 {
     //qDebug("Draw point at (%d, %d)", (int)point.x(), (int)point.y());
-    if (point.x() >= 0 && point.y() >= 0 && point.x() < m_image.width() && point.y() < m_image.height()) {
+    if (point.x() >= 0 && point.y() >= 0 && point.x() < p_image->width() && point.y() < p_image->height()) {
         // Drawing a point
         putPixel((int)point.x(), (int)point.y(), color);
     }
 }
 
+// TODO replace this by a Bresenham algorithm
 void Renderer::drawLine(const QVector2D& point0, const QVector2D& point1, const QColor& color)
 {
     float dist = (point1 - point0).length();
@@ -66,8 +57,8 @@ void Renderer::render(const Camera& camera, const QVector<Mesh>& meshList)
     // Projection
     QMatrix4x4 projection;
     projection.setToIdentity();
-    projection.perspective(45, (float)m_image.width()/(float)m_image.height(), 1.0, 1000.0);
-    QRect viewport(0, 0, m_image.width(), m_image.height());
+    projection.perspective(45, (float)p_image->width()/(float)p_image->height(), 1.0, 1000.0);
+    QRect viewport(0, 0, p_image->width(), p_image->height());
 
     for(const Mesh& mesh : meshList) {
 

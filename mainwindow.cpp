@@ -22,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent)
     // Model
     p_camera = new Camera();
     p_camera->setTarget(QVector3D(0, 0, 0));
-    p_camera->setPosition(QVector3D(10, 3, 10));
-    p_camera->setDirection(QVector3D(0, -1, 0));
+    p_camera->setPosition(QVector3D(10, -3, 10));
+    p_camera->setDirection(QVector3D(0, 1, 0));
     Loader::load(m_meshList);
 
     // View
@@ -33,28 +33,13 @@ MainWindow::MainWindow(QWidget *parent)
     // scene, render
     p_scene = new QGraphicsScene(this);
     ui->mainView->setScene(p_scene);
-    p_render = new Render(*p_camera, m_meshList, this);
+    p_render = new Animation(*p_camera, m_meshList, this);
     p_scene->addItem(p_render);
-
-    // Thread
-//    p_thread = new QThread;
-//    p_modelLoop = new ModelLoop(*p_camera, m_meshList);
-//    p_modelLoop->moveToThread(p_thread);
-//    connect(p_thread, &QThread::started, p_modelLoop, &ModelLoop::start);
-//    connect(p_thread, &QThread::finished, p_thread, &QObject::deleteLater);
-//    p_thread->start();
 }
 
 MainWindow::~MainWindow()
 {
     qDebug("~MainWindow");
-
-    // Thread
-//    p_modelLoop->stop();
-//    p_thread->quit();
-//    p_thread->wait();
-//    delete p_modelLoop;
-//    delete p_thread;
 
     // Model
     delete p_camera;

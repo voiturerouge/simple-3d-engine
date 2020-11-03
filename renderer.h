@@ -14,21 +14,23 @@
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(int width, int height, QImage::Format format);
+    ~Renderer();
+
     void setImage(QImage image);
-    QImage getImage() const;
+
     void clear(const QColor& color);
-    void present();
-    void putPixel(int x, int y, const QColor& color);
-    void drawPoint(const QVector2D& point, const QColor& color);
-    void drawLine(const QVector2D& point1, const QVector2D& point2, const QColor& color);
     void render(const Camera& camera, const QVector<Mesh>& meshList);
+    void present();
+    QImage getImage() const;
 
-signals:
+    void drawTriangle(const QVector2D& point1, const QVector2D& point2, const QVector2D& point3, const QColor& color);
+    void drawLine(const QVector2D& point1, const QVector2D& point2, const QColor& color);
+    void drawPoint(const QVector2D& point, const QColor& color);
+    void putPixel(int x, int y, const QColor& color);
 
-private:
-    QImage m_image;
-    QImage m_backBuffer;
+private:    
+    QImage* p_image;
 };
 
 #endif // RENDERER_H
