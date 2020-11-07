@@ -17,17 +17,20 @@ public:
     Renderer(int width, int height, QImage::Format format);
     ~Renderer();
 
-    void setImage(QImage image);
-
     void clear(const QColor& color);
     void render(const Camera& camera, const QVector<Mesh>& meshList);
-    void present();
     QImage getImage() const;
 
     void drawTriangle(const QVector2D& point1, const QVector2D& point2, const QVector2D& point3, const QColor& color);
     void drawLine(const QVector2D& point1, const QVector2D& point2, const QColor& color);
     void drawPoint(const QVector2D& point, const QColor& color);
     void putPixel(int x, int y, const QColor& color);
+
+    // TODO Bresenham
+    void drawBTriangle(const QVector2D& point1, const QVector2D& point2, const QVector2D& point3, const QColor& color);
+    void drawBLine(const QVector2D& point1, const QVector2D& point2, const QColor& color);
+    void initBLine(int x1, int y1, int x2, int y2, int& dx, int& dy, int& err);
+    void getNextBPoint(int currx, int& dx, int& dy, int& err, int increment, int sign, );
 
 private:    
     QImage* p_image;
