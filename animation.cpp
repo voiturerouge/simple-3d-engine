@@ -19,6 +19,7 @@ Animation::Animation(Camera &camera, QVector<Mesh> &meshList, QObject *parent)
 
 void Animation::nextFrame()
 {
+    static uint64_t count = 0;
     static float i = 0;
     i = i + 0.5f;
     m_meshList[0].setRotation(QVector3D(fmod(i,360), fmod(i,360), 0));
@@ -28,6 +29,8 @@ void Animation::nextFrame()
     p_renderer->render(m_camera, m_meshList);
     m_pixmap = QPixmap::fromImage(p_renderer->getImage()).copy();
     this->update(0, 0, 640, 480);
+
+    count++;
 }
 
 void Animation::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)

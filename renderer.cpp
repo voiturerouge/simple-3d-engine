@@ -12,16 +12,18 @@ Renderer::~Renderer()
     delete []p_zBuffer;
 }
 
-QImage Renderer::getImage() const
-{
-    return *p_image;
-}
-
 void Renderer::clear(const QColor& color)
 {
     p_image->fill(color);
     std::fill(p_zBuffer, p_zBuffer+(p_image->width()*p_image->height()), std::numeric_limits<float>::max());
 }
+
+QImage Renderer::getImage() const
+{
+    return *p_image;
+}
+
+
 
 void Renderer::setPixel(const int& x, const int& y, const float& z, const QColor& color)
 {
@@ -31,28 +33,62 @@ void Renderer::setPixel(const int& x, const int& y, const float& z, const QColor
         line[x] = qRgba(color.red(), color.green(), color.blue(), color.alpha());
         p_zBuffer[y * p_image->width() + x] = z;
     }
+    else {
+//        qDebug("error");
+    }
 }
 
+void Renderer::fillScanLine(const QVector3D& pa, const QVector3D& pb, const QVector3D& pc, const int& x1, const int& x2, const int& y, const QColor& color)
+{
+    int   xa = (int) pa.x();
+    float za = pa.z();
+    int   xb = (int) pb.x();
+    float zb = pb.z();
+    int   xc = (int) pc.x();
+    float zc = pc.z();
 
-void Renderer::fillBTriangle(const QVector3D& point1, const QVector3D& point2, const QVector3D& point3, const QColor& color)
+
+    if (x1 == x2) {
+        float z = (x1 - xa) * (zb - za) / (xb - xa) + za;
+        setPixel(x1, y, z, color);
+        return;
+    }
+
+    int xs, xe;
+    float zs, ze;
+
+    if (x1 < x2) {
+        // start point is on line (A,B)
+        xs = x1;
+        zs = (xs - xa) * (zb - za) / (xb - xa) + za;
+        // end point is on line (A, C)
+        xe = x2;
+        ze = (xe - xa) * (zc - za) / (xc - xa) + za;
+    }
+
+    else {
+        // start point is on line (A,C)
+        xs = x2;
+        zs = (xs - xa) * (zc - za) / (xc - xa) + za;
+        xe = x1;
+        ze = (xe - xa) * (zb - za) / (xb - xa) + za;
+    }
+
+    // fill line
+    for (int x = xs; x <= xe; x++)
+    {
+        float z = (x - xs) * (ze - zs) / (xe - xs) + zs;
+        setPixel(x, y, z, color);
+    }
+}
+
+void Renderer::fillBTriangle(const QVector3D& v1, const QVector3D& v2, const QVector3D& v3, const QColor& color)
 {
     // sort vertices
-    std::vector<std::vector<int>> points{{(int) point1.x(), (int) point1.y()},
-                                         {(int) point2.x(), (int) point2.y()},
-                                         {(int) point3.x(), (int) point3.y()}};
-    std::sort(points.begin(),
-              points.end(),
-              [](std::vector<int> pointa, std::vector<int> pointb) { return pointa[1] < pointb[1]; });
-
-    int   x1 = points[0][0];
-    int   y1 = points[0][1];
-    float z1 = points[0][2];
-    int   x2 = points[1][0];
-    int   y2 = points[1][1];
-    float z2 = points[1][2];
-    int   x3 = points[2][0];
-    int   y3 = points[2][1];
-    float z3 = points[2][2];
+    std::vector<QVector3D> v{v1, v2, v3};
+    std::sort(v.begin(),
+              v.end(),
+              [](QVector3D va, QVector3D vb) { return va.y() < vb.y(); });
 
     int dx1, dy1, sx1, sy1, err1;
     int dx2, dy2, sx2, sy2, err2;
@@ -64,80 +100,86 @@ void Renderer::fillBTriangle(const QVector3D& point1, const QVector3D& point2, c
     QColor magenta = Qt::magenta;
 
     // top triangle
-    xnext1 = x1, ynext1 = y1;
-    xnext2 = x1, ynext2 = y1;
-    initBLine(x1, y1, x2, y2, dx1, dy1, sx1, sy1, err1); // line point1 to point2
-    initBLine(x1, y1, x3, y3, dx2, dy2, sx2, sy2, err2); // line point1 to point2
-    for (int y = y1; y <= y2; y++)
+    // line (A,B)
+    initBLine(v[0], v[1], dx1, dy1, sx1, sy1, err1);
+    xnext1 = (int) v[0].x(),
+    ynext1 = (int) v[0].y();
+
+    // line (A,C)
+    initBLine(v[0], v[2], dx2, dy2, sx2, sy2, err2);
+    xnext2 = (int) v[0].x(),
+    ynext2 = (int) v[0].y();
+
+    for (int y = v[0].y(); y <= v[1].y(); y++)
     {
         // get
-        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
-        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, x3, y3, dx2, dy2, sx2, sy2, err2);
-
-        int xmax = (xprev1 < xprev2) ? xprev2 : xprev1;
-//        float zprev1 = (xprev1 - x1) * (z2 - z1) / (x2 - x1) + z1;
-//        float zprev2 = (xprev2 - x1) * (z3 - z1) / (x3 - x1) + z3;
-
-        // fill line
-        for (int x = (xprev1 < xprev2) ? xprev1:xprev2; x <= xmax; x++)
-        {
-            //float z = (x - x1) * (z2 - z1) / (x2 - x1) + z1;
-
-            setPixel(x, y, 100, blue);
-        }
+        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, v[1], dx1, dy1, sx1, sy1, err1);
+        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, v[2], dx2, dy2, sx2, sy2, err2);
+        fillScanLine(v[0], v[1], v[2], xprev1, xprev2, y, color);
     }
 
     // bottom triangle
-    xnext1 = x3, ynext1 = y3;
-    xnext2 = x3, ynext2 = y3;
-    initBLine(x3, y3, x2, y2, dx1, dy1, sx1, sy1, err1); // line point3 to point2
-    initBLine(x3, y3, x1, y1, dx2, dy2, sx2, sy2, err2); // line point3 to point1
-    for (int y = y3; y >= y2; y--)
+    // line (C, B)
+    initBLine(v[2], v[1], dx1, dy1, sx1, sy1, err1);
+    xnext1 = (int) v[2].x(),
+    ynext1 = (int) v[2].y();
+
+    // line (C, A)
+    initBLine(v[2], v[0], dx2, dy2, sx2, sy2, err2);
+    xnext2 = (int) v[2].x(),
+    ynext2 = (int) v[2].y();
+
+    for (int y = v[2].y(); y >= v[1].y(); y--)
     {
-        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
-        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, x1, y1, dx2, dy2, sx2, sy2, err2);
-
-        int xmax = (xprev1 < xprev2) ? xprev2:xprev1;
-
-        for (int x = (xprev1 < xprev2) ? xprev1:xprev2; x <= xmax; x++)
-        {
-            setPixel(x, y, 100, blue);
-        }
+        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, v[1], dx1, dy1, sx1, sy1, err1);
+        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, v[0], dx2, dy2, sx2, sy2, err2);
+        fillScanLine(v[2], v[1], v[0], xprev1, xprev2, y, color);
     }
 }
 
 void Renderer::drawBLine(const QVector3D& point1, const QVector3D& point2, const QColor& color)
 {
-    int x1 = (int) point1.x();
-    int y1 = (int) point1.y();
-    int x2 = (int) point2.x();
-    int y2 = (int) point2.y();
+    int   x1 = (int) point1.x();
+    int   y1 = (int) point1.y();
+    float z1 = point1.z();
+    int   x2 = (int) point2.x();
+    int   y2 = (int) point2.y();
+    float z2 = point2.z();
 
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
     int sx = (x1 < x2) ? 1 : -1; // x increment
     int sy = (y1 < y2) ? 1 : -1; // y increment
     int err = dx - dy;
+    int x = x1;
+    int y = y1;
+    float z = z1;
 
     while (true) {
-        setPixel(x1, y1, 0, color);
+        setPixel(x, y, -100, color);
 
-        if ((x1 == x2) && (y1 == y2))
+        if ((x == x2) && (y == y2))
             break;
         int e2 = 2 * err;
         if (e2 > -dy) {
             err -= dy;
-            x1 += sx;
+            x += sx;
         }
         if (e2 < dx) {
             err += dx;
-            y1 += sy;
+            y += sy;
         }
+        z = (x - x1) * (z2 - z1) / (x2 - x1) + z1;
     }
 }
 
-void Renderer::initBLine(int x1, int y1, int x2, int y2, int& dx, int& dy, int& sx, int& sy, int& err)
+void Renderer::initBLine(const QVector3D& v1, const QVector3D& v2, int& dx, int& dy, int& sx, int& sy, int& err)
 {    
+    int x1 = (int) v1.x();
+    int y1 = (int) v1.y();
+    int x2 = (int) v2.x();
+    int y2 = (int) v2.y();
+
     dx = abs(x2 - x1);
     dy = abs(y2 - y1);
     sx = (x1 < x2) ? 1 : -1; // x increment
@@ -145,39 +187,43 @@ void Renderer::initBLine(int x1, int y1, int x2, int y2, int& dx, int& dy, int& 
     err = dx - dy;
 }
 
-//void Renderer::getBLineNextPoint(const QVector2D& seg1start, QVector2D& seg1end, QVector2D& seg2start, const QVector2D& lineend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
-//{
-//    bool exit = false;
-//    seg1end.setY(seg1start.y());
-//    seg2start.setX(seg1start.x())
-//    seg2start.setY(seg1start.y());
-
-//    while (true) {
-//        if (seg1start == lineend)
-//            break;
-//        int e2 = 2 * err;
-//        if (e2 < dx) {
-//            err += dx;
-//            seg2start.setY(seg2start.y() + sy);
-//            exit = true;
-//        }
-//        if (e2 > -dy) {
-//            err -= dy;
-//            if (exit) {
-//                seg1end.setX(seg2start.x());
-//            }
-//            seg2start.setX(seg2start.x() + sx);
-//        }
-//        if (exit)
-//            break;
-//    }
-//}
-
-void Renderer::getBLineNextPoint(int& xnext, int& ynext, int& xprev, int& yprev, const int& xend, const int& yend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
+void Renderer::getBLineNextSegment(const QVector2D& seg1start, QVector2D& seg1end, QVector2D& seg2start, const QVector2D& lineend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
 {
     bool exit = false;
+    seg1end.setX(seg1start.x());
+    seg1end.setY(seg1start.y());
+    seg2start.setX(seg1start.x());
+    seg2start.setY(seg1start.y());
+
+    while (true) {
+        if (seg1start == lineend)
+            break;
+        int e2 = 2 * err;
+        if (e2 < dx) {
+            err += dx;
+            seg2start.setY(seg2start.y() + sy);
+            exit = true;
+        }
+        if (e2 > -dy) {
+            err -= dy;
+            if (exit) {
+                seg1end.setX(seg2start.x());
+            }
+            seg2start.setX(seg2start.x() + sx);
+        }
+        if (exit)
+            break;
+    }
+}
+
+void Renderer::getBLineNextPoint(int& xnext, int& ynext, int& xprev, int& yprev, const QVector3D& vend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
+{
+    bool exit = false;
+    int xend = (int) vend.x();
+    int yend = (int) vend.y();
     yprev = ynext;
     xprev = xnext;
+
 
     while (true) {
         if ((xnext == xend) && (ynext == yend))
@@ -227,18 +273,26 @@ void Renderer::render(const Camera& camera, const QVector<Mesh>& meshList)
         world.rotate(mesh.getRotation().z(), 0, 0, 1);
 
         // Draw
-        for (QVector<int> face : mesh.m_faces) {
-            QVector3D point1 = mesh.m_vertices[face[0]].project(view*world, projection, viewport);
-            QVector3D point2 = mesh.m_vertices[face[1]].project(view*world, projection, viewport);
-            QVector3D point3 = mesh.m_vertices[face[2]].project(view*world, projection, viewport);
+        for (int i=0; i<mesh.m_faces.size(); i++)
+        {
+            QVector<int> face = mesh.m_faces[i];
+
+            QVector3D v1 = mesh.m_vertices[face[0]].project(view*world, projection, viewport);
+            QVector3D v2 = mesh.m_vertices[face[1]].project(view*world, projection, viewport);
+            QVector3D v3 = mesh.m_vertices[face[2]].project(view*world, projection, viewport);
 
             // triangle
-            fillBTriangle(point1, point2, point3, mesh.getColor());
+            if (i%2) {
+                fillBTriangle(v1, v2, v3, Qt::blue);
+            }
+            else {
+                fillBTriangle(v1, v2, v3, Qt::cyan);
+            }
 
             // wireframe
-            drawBLine(point1, point2, mesh.getColor());
-            drawBLine(point2, point3, mesh.getColor());
-            drawBLine(point3, point1, mesh.getColor());
+//            drawBLine(point1, point2, mesh.getColor());
+//            drawBLine(point2, point3, mesh.getColor());
+//            drawBLine(point3, point1, mesh.getColor());
         }
     }
 }
