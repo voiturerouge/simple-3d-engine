@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.13.2, 2020-11-09T14:40:27. -->
+<!-- Written by QtCreator 4.13.2, 2020-11-11T11:16:36. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -336,7 +336,7 @@
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory"></value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/Users/gerard/Documents/GitHub/build-basic-3d-engine-Desktop_x86_darwin_generic_mach_o_64bit-Debug/basic-3d-engine.app/Contents/MacOS</value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory.default"></value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

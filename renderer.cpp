@@ -3,12 +3,13 @@
 Renderer::Renderer(int width, int height)
 {
     p_image = new QImage(width, height, QImage::Format_ARGB32);
-    p_zBuffer = (float*) malloc(sizeof(float) * width * height); // z depth of pixel (x, y) will be stored at index 'y*width + x'
+    p_zBuffer = new float[width * height]; // z depth of pixel (x, y) will be stored at index 'y*width + x'
 }
 
 Renderer::~Renderer()
 {
     delete p_image;
+    delete []p_zBuffer;
 }
 
 QImage Renderer::getImage() const
@@ -19,18 +20,21 @@ QImage Renderer::getImage() const
 void Renderer::clear(const QColor& color)
 {
     p_image->fill(color);
-    memset(p_zBuffer, std::numeric_limits<float>::max(), p_image->width() * p_image->height());
+    std::fill(p_zBuffer, p_zBuffer+(p_image->width()*p_image->height()), std::numeric_limits<float>::max());
 }
 
-void Renderer::setPixel(const int& x, const int& y, const int& z, const QColor& color)
+void Renderer::setPixel(const int& x, const int& y, const float& z, const QColor& color)
 {
-    //p_image->setPixel(x, y, color.rgba());
-    QRgb* line = (QRgb*) p_image->scanLine(y);
-    line[x] = qRgba(color.red(), color.green(), color.blue(), color.alpha());
+    if (p_zBuffer[y * p_image->width() + x] > z)
+    {
+        QRgb* line = (QRgb*) p_image->scanLine(y);
+        line[x] = qRgba(color.red(), color.green(), color.blue(), color.alpha());
+        p_zBuffer[y * p_image->width() + x] = z;
+    }
 }
 
 
-void Renderer::drawBTriangle(const QVector3D& point1, const QVector3D& point2, const QVector3D& point3, const QColor& color)
+void Renderer::fillBTriangle(const QVector3D& point1, const QVector3D& point2, const QVector3D& point3, const QColor& color)
 {
     // sort vertices
     std::vector<std::vector<int>> points{{(int) point1.x(), (int) point1.y()},
@@ -40,55 +44,64 @@ void Renderer::drawBTriangle(const QVector3D& point1, const QVector3D& point2, c
               points.end(),
               [](std::vector<int> pointa, std::vector<int> pointb) { return pointa[1] < pointb[1]; });
 
-    int x1 = points[0][0];
-    int y1 = points[0][1];
-    int x2 = points[1][0];
-    int y2 = points[1][1];
-    int x3 = points[2][0];
-    int y3 = points[2][1];
+    int   x1 = points[0][0];
+    int   y1 = points[0][1];
+    float z1 = points[0][2];
+    int   x2 = points[1][0];
+    int   y2 = points[1][1];
+    float z2 = points[1][2];
+    int   x3 = points[2][0];
+    int   y3 = points[2][1];
+    float z3 = points[2][2];
 
     int dx1, dy1, sx1, sy1, err1;
     int dx2, dy2, sx2, sy2, err2;
 
-    int xcur1, ycur1, xprev1, yprev1;
-    int xcur2, ycur2, xprev2, yprev2;
+    int xnext1, ynext1, xprev1, yprev1;
+    int xnext2, ynext2, xprev2, yprev2;
 
     QColor blue = Qt::blue;
     QColor magenta = Qt::magenta;
 
-    // fill top triangle
-    xcur1 = x1, ycur1 = y1;
-    xcur2 = x1, ycur2 = y1;
+    // top triangle
+    xnext1 = x1, ynext1 = y1;
+    xnext2 = x1, ynext2 = y1;
     initBLine(x1, y1, x2, y2, dx1, dy1, sx1, sy1, err1); // line point1 to point2
     initBLine(x1, y1, x3, y3, dx2, dy2, sx2, sy2, err2); // line point1 to point2
-    for (int i=y1; i<=y2; i++) {
-        getBLineSegmentEnd(xcur1, ycur1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
-        getBLineSegmentEnd(xcur2, ycur2, xprev2, yprev2, x3, y3, dx2, dy2, sx2, sy2, err2);
-        //qDebug("drawBTriangle - fill line between (%d,%d) to (%d,%d)", xprev1, yprev1, xprev2, yprev2);
-        QRgb* line = (QRgb*) p_image->scanLine(i);
-        int jmax = (xprev1<xprev2)?xprev2:xprev1;
-        for (int j = (xprev1<xprev2)?xprev1:xprev2; j <= jmax; j++) {
+    for (int y = y1; y <= y2; y++)
+    {
+        // get
+        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
+        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, x3, y3, dx2, dy2, sx2, sy2, err2);
 
-            //setPixel(j, i, z, blue);
+        int xmax = (xprev1 < xprev2) ? xprev2 : xprev1;
+//        float zprev1 = (xprev1 - x1) * (z2 - z1) / (x2 - x1) + z1;
+//        float zprev2 = (xprev2 - x1) * (z3 - z1) / (x3 - x1) + z3;
 
-            line[j] = qRgba(blue.red(), blue.green(), blue.blue(), blue.alpha());
+        // fill line
+        for (int x = (xprev1 < xprev2) ? xprev1:xprev2; x <= xmax; x++)
+        {
+            //float z = (x - x1) * (z2 - z1) / (x2 - x1) + z1;
 
+            setPixel(x, y, 100, blue);
         }
     }
 
-    // fill bottom triangle
-    xcur1 = x3, ycur1 = y3;
-    xcur2 = x3, ycur2 = y3;
+    // bottom triangle
+    xnext1 = x3, ynext1 = y3;
+    xnext2 = x3, ynext2 = y3;
     initBLine(x3, y3, x2, y2, dx1, dy1, sx1, sy1, err1); // line point3 to point2
     initBLine(x3, y3, x1, y1, dx2, dy2, sx2, sy2, err2); // line point3 to point1
-    for (int i=y3; i>=y2; i--) {
-        getBLineSegmentEnd(xcur1, ycur1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
-        getBLineSegmentEnd(xcur2, ycur2, xprev2, yprev2, x1, y1, dx2, dy2, sx2, sy2, err2);
-        //qDebug("drawBTriangle - fill line between (%d,%d) to (%d,%d)", xprev1, yprev1, xprev2, yprev2);
-        QRgb* line = (QRgb*) p_image->scanLine(i);
-        int jmax = (xprev1<xprev2)?xprev2:xprev1;
-        for (int j = (xprev1<xprev2)?xprev1:xprev2; j <= jmax; j++) {
-            line[j] = qRgba(blue.red(), blue.green(), blue.blue(), blue.alpha());
+    for (int y = y3; y >= y2; y--)
+    {
+        getBLineNextPoint(xnext1, ynext1, xprev1, yprev1, x2, y2, dx1, dy1, sx1, sy1, err1);
+        getBLineNextPoint(xnext2, ynext2, xprev2, yprev2, x1, y1, dx2, dy2, sx2, sy2, err2);
+
+        int xmax = (xprev1 < xprev2) ? xprev2:xprev1;
+
+        for (int x = (xprev1 < xprev2) ? xprev1:xprev2; x <= xmax; x++)
+        {
+            setPixel(x, y, 100, blue);
         }
     }
 }
@@ -132,28 +145,56 @@ void Renderer::initBLine(int x1, int y1, int x2, int y2, int& dx, int& dy, int& 
     err = dx - dy;
 }
 
-void Renderer::getBLineSegmentEnd(int& xcur, int& ycur, int& xprev, int& yprev, const int& xend, const int& yend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
+//void Renderer::getBLineNextPoint(const QVector2D& seg1start, QVector2D& seg1end, QVector2D& seg2start, const QVector2D& lineend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
+//{
+//    bool exit = false;
+//    seg1end.setY(seg1start.y());
+//    seg2start.setX(seg1start.x())
+//    seg2start.setY(seg1start.y());
+
+//    while (true) {
+//        if (seg1start == lineend)
+//            break;
+//        int e2 = 2 * err;
+//        if (e2 < dx) {
+//            err += dx;
+//            seg2start.setY(seg2start.y() + sy);
+//            exit = true;
+//        }
+//        if (e2 > -dy) {
+//            err -= dy;
+//            if (exit) {
+//                seg1end.setX(seg2start.x());
+//            }
+//            seg2start.setX(seg2start.x() + sx);
+//        }
+//        if (exit)
+//            break;
+//    }
+//}
+
+void Renderer::getBLineNextPoint(int& xnext, int& ynext, int& xprev, int& yprev, const int& xend, const int& yend, const int& dx, const int& dy, const int& sx, const int& sy, int& err)
 {
     bool exit = false;
-    yprev = ycur;
-    xprev = xcur;
+    yprev = ynext;
+    xprev = xnext;
 
     while (true) {
-        if ((xcur == xend) && (ycur == yend))
+        if ((xnext == xend) && (ynext == yend))
             break;
         int e2 = 2 * err;
         if (e2 < dx) {
             err += dx;
-            yprev = ycur;
-            ycur += sy;
+            yprev = ynext;
+            ynext += sy;
             exit = true;
         }
         if (e2 > -dy) {
             err -= dy;
             if (exit) {
-                xprev = xcur;
+                xprev = xnext;
             }
-            xcur += sx;
+            xnext += sx;
         }
         if (exit)
             break;
@@ -191,7 +232,8 @@ void Renderer::render(const Camera& camera, const QVector<Mesh>& meshList)
             QVector3D point2 = mesh.m_vertices[face[1]].project(view*world, projection, viewport);
             QVector3D point3 = mesh.m_vertices[face[2]].project(view*world, projection, viewport);
 
-            drawBTriangle(point1, point2, point3, mesh.getColor());
+            // triangle
+            fillBTriangle(point1, point2, point3, mesh.getColor());
 
             // wireframe
             drawBLine(point1, point2, mesh.getColor());
