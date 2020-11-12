@@ -56,9 +56,9 @@ void Loader::load(QVector<Mesh>& meshList)
     mesh.m_vertices.append(QVector3D(1, -1, -1));
     mesh.m_vertices.append(QVector3D(-1, -1, -1));
     mesh.m_faces.clear();
-    mesh.m_faces.append({0, 1, 2});
-//    mesh.m_faces.append({1, 2, 3});
-//    mesh.m_faces.append({1, 3, 6});
+//    mesh.m_faces.append({0, 1, 2});
+    mesh.m_faces.append({1, 2, 3});
+    mesh.m_faces.append({1, 3, 6});
 //    mesh.m_faces.append({1, 5, 6});
 //    mesh.m_faces.append({0, 1, 4});
 //    mesh.m_faces.append({1, 4, 5});
