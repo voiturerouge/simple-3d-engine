@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     // UI
     ui->setupUi(this);
 
-    // scene, render
+    // Scene and render
     p_scene = new QGraphicsScene(this);
     ui->mainView->setScene(p_scene);
     p_render = new Animation(*p_camera, m_meshList, this);
